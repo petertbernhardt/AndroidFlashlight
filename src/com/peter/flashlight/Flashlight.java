@@ -6,33 +6,36 @@ import android.view.Menu;
 import android.view.View.OnClickListener;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
-import android.content.pm.PackageManager;
 import android.view.View;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+/*
+ * TODO:
+ * Fix leaving and re-opening the app.
+ * Find a better way of handling when the camera is null when trying to turn on the light
+ */
+
 public class Flashlight extends Activity {
 
-	public static Camera cam = null; // if it's not static, onDestroy() destroys it
+	public static Camera cam;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_flashlight);
+		cam = Camera.open();
 		addListenerOnButton();
 	}
 	
 	// Toggle Button Event Listener
 	public void addListenerOnButton() {
-		// TODO Auto-generated method stub
 		final ToggleButton tb = (ToggleButton)findViewById(R.id.toggleButton1) ;
 	    tb.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
-				// If the ToggleButton is set to off, fire flashLightOn(View v)
-				// Else, fire flashLightOff(View v)
-				if (!tb.isChecked()) {
+				if (tb.isChecked()) {
 					flashLightOn(v);
 				} else {
 					flashLightOff(v);
@@ -52,10 +55,12 @@ public class Flashlight extends Activity {
 	// Method that, if the device has flash capabilities, turns on the flash to be used as a light.
 	// If there is no flash, then it displays that to the user.
 	public void flashLightOn(View view) {
+		if (cam == null) {
+			cam = Camera.open();
+		}
 		try {
 			// If the phone has flash capabilities
-			if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)) {
-				cam = Camera.open();
+			if (hasCameraFlash()) {
 				Parameters p = cam.getParameters();
 				p.setFlashMode(Parameters.FLASH_MODE_TORCH);
 				cam.setParameters(p);
@@ -74,7 +79,7 @@ public class Flashlight extends Activity {
 	// If there is no flash, then it displays that to the user.
 	public void flashLightOff(View view) {
 		try {
-			if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)) {
+			if (hasCameraFlash()) {
 				cam.stopPreview();
 				cam.release();
 				cam = null;
@@ -88,4 +93,9 @@ public class Flashlight extends Activity {
 		}
 	}
 	
+	// Checks if the device has a camera flash
+	public static boolean hasCameraFlash() {
+	    Camera.Parameters p = cam.getParameters();
+	    return p.getFlashMode() == null ? false : true;
+	}	
 }
